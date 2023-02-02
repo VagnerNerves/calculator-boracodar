@@ -1,20 +1,19 @@
-import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
+import { StatusBar } from 'react-native'
+import { ThemeProvider } from 'styled-components'
+
+import theme from './src/theme'
+
+import { Calculator } from './src/screens/Calculator'
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Create Project Calculator</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ThemeProvider theme={theme}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
+      <Calculator />
+    </ThemeProvider>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
-})
