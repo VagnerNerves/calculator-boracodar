@@ -53,6 +53,7 @@ export type TextButtonColor = 'violet' | 'write'
 
 interface TextButtonProps {
   colortext: TextButtonColor
+  isSize_36?: boolean
 }
 
 const buttonColorText = {
@@ -62,7 +63,10 @@ const buttonColorText = {
 
 export const TextButton = styled.Text<TextButtonProps>`
   font-family: ${({ theme }) => theme.FONT_FAMILY.REGULAR};
-  font-size: ${({ theme }) => theme.FONT_SIZE.SIZE_24}px;
+  font-size: ${props =>
+    props.isSize_36
+      ? props.theme.FONT_SIZE.SIZE_36
+      : props.theme.FONT_SIZE.SIZE_24}px;
   color: ${props => props.theme.COLORS[buttonColorText[props.colortext]]};
 `
 

@@ -57,7 +57,11 @@ export function ButtonCalculator({
       {typeButtom === 'sum' && <IconSum />}
       {typeButtom === 'equals' && <IconEquals />}
       {typeButtom === 'sumandminus' && <IconSumAndMinus />}
-      {typeButtom === ',' && <TextButton colortext={textColor}>,</TextButton>}
+      {typeButtom === ',' && (
+        <TextButton colortext={textColor} isSize_36>
+          ,
+        </TextButton>
+      )}
       {typeButtom === '0' && <TextButton colortext={textColor}>0</TextButton>}
       {typeButtom === '1' && <TextButton colortext={textColor}>1</TextButton>}
       {typeButtom === '2' && <TextButton colortext={textColor}>2</TextButton>}
