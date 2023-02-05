@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { ButtonCalculator } from './components/ButtonCalculator'
 
 import {
@@ -7,50 +8,56 @@ import {
   ContainerButtons,
   ContainerResult,
   ContainerTop,
+  IconDivided,
+  IconEquals,
+  IconMinus,
+  IconSum,
+  IconTimes,
   Result
 } from './styles'
 
+type TypeCalculation = '' | 'divided' | 'times' | 'minus' | 'sum' | 'equals'
+
 interface CalculatorProps {
   historic: string
-  value1: number
-  value2: number
+  value1: number | null
+  value2: number | null
   valueEntered: number
-  typeCalculation: string
+  typeCalculation: TypeCalculation
+  lastTypeCalculation: TypeCalculation
   comma: boolean
   valueAfterComma: string
 }
 
+const signalTypeCalculator = {
+  divided: '÷',
+  times: 'x',
+  minus: '-',
+  sum: '+',
+  equals: '='
+} as const
+
 export function Calculator() {
   const [calculation, setCalculation] = useState<CalculatorProps>({
     historic: '',
-    value1: 0,
-    value2: 0,
+    value1: null,
+    value2: null,
     valueEntered: 0,
     typeCalculation: '',
+    lastTypeCalculation: '',
     comma: false,
     valueAfterComma: ''
   })
-  const variavel = '÷ | x | - | + | ='
 
   const maxNumber = 10
 
-  function checkComma() {
-    let result = ''
-    if (
-      calculation.comma &&
-      !calculation.valueEntered.toString().includes('.')
-    ) {
-      result = '.'
-    }
-    return result
-  }
-
-  function formattedStringforNumber(value: number) {
+  function formattedStringforNumber(value: number, checkComa: boolean = false) {
     let valueFormatted = Number(value).toLocaleString('pt-BR', {
-      maximumFractionDigits: maxNumber
+      maximumFractionDigits: maxNumber,
+      maximumSignificantDigits: maxNumber
     })
 
-    if (calculation.comma) {
+    if (calculation.comma && checkComa) {
       if (!value.toString().includes('.')) {
         valueFormatted = valueFormatted + ','
       }
@@ -61,7 +68,85 @@ export function Calculator() {
     return valueFormatted
   }
 
+  function AdjustEquals() {
+    if (calculation.typeCalculation === 'equals') {
+      let historic = calculation.historic
+      let calcTotal = 0
+
+      if (
+        calculation.lastTypeCalculation === 'sum' ||
+        calculation.lastTypeCalculation === 'minus' ||
+        calculation.lastTypeCalculation === 'times' ||
+        calculation.lastTypeCalculation === 'divided'
+      ) {
+        if (calculation.value1 && calculation.value2) {
+          if (calculation.lastTypeCalculation === 'sum') {
+            calcTotal = calculation.value1 + calculation.value2
+          } else if (calculation.lastTypeCalculation === 'minus') {
+            calcTotal = calculation.value1 - calculation.value2
+          }
+          if (calculation.lastTypeCalculation === 'times') {
+            calcTotal = calculation.value1 * calculation.value2
+          }
+          if (calculation.lastTypeCalculation === 'divided') {
+            calcTotal = calculation.value1 / calculation.value2
+          }
+        }
+
+        historic =
+          historic +
+          ' ' +
+          signalTypeCalculator[calculation.typeCalculation] +
+          ' ' +
+          formattedStringforNumber(calcTotal) +
+          ' | '
+      }
+
+      setCalculation(prevState => ({
+        ...prevState,
+        historic,
+        typeCalculation: '',
+        valueEntered: 0,
+        comma: false,
+        valueAfterComma: ''
+      }))
+
+      return true
+    }
+
+    return false
+  }
+
+  function valueReturnsTotal() {
+    let calcTotal = 0
+
+    if (
+      calculation.lastTypeCalculation === 'sum' ||
+      calculation.lastTypeCalculation === 'minus' ||
+      calculation.lastTypeCalculation === 'times' ||
+      calculation.lastTypeCalculation === 'divided'
+    ) {
+      if (calculation.value1 && calculation.value2) {
+        if (calculation.lastTypeCalculation === 'sum') {
+          calcTotal = calculation.value1 + calculation.value2
+        } else if (calculation.lastTypeCalculation === 'minus') {
+          calcTotal = calculation.value1 - calculation.value2
+        }
+        if (calculation.lastTypeCalculation === 'times') {
+          calcTotal = calculation.value1 * calculation.value2
+        }
+        if (calculation.lastTypeCalculation === 'divided') {
+          calcTotal = calculation.value1 / calculation.value2
+        }
+      }
+    }
+
+    return calcTotal
+  }
+
   function handleClearValueEntred() {
+    AdjustEquals()
+
     setCalculation(prevState => ({
       ...prevState,
       valueEntered: 0,
@@ -73,65 +158,400 @@ export function Calculator() {
   function handleClearAll() {
     setCalculation({
       historic: '',
-      value1: 0,
-      value2: 0,
+      value1: null,
+      value2: null,
       valueEntered: 0,
       typeCalculation: '',
+      lastTypeCalculation: '',
       comma: false,
       valueAfterComma: ''
     })
   }
 
   function handleAddNumber(value: number) {
-    const totalNumbers =
-      (calculation.valueEntered.toString() + calculation.valueAfterComma)
-        .length + 1
+    let valueAfterComma = ''
+    let valueEntered = 0
+    let comma = false
+    if (!AdjustEquals()) {
+      valueAfterComma = calculation.valueAfterComma
+      valueEntered = calculation.valueEntered
+      comma = calculation.comma
+    }
+
+    const totalNumbers = (valueEntered.toString() + valueAfterComma).length + 1
 
     if (totalNumbers <= maxNumber) {
-      let valueAfterComma = ''
-      let valueEntered = 0
+      let value2 = calculation.value2
 
-      if (!calculation.comma) {
+      if (calculation.value1 && calculation.value2 === null) {
+        valueEntered = value
+        value2 = 0
+      } else if (!comma) {
         valueAfterComma = ''
-        valueEntered = Number(calculation.valueEntered + '' + value)
-      } else if (calculation.comma && value === 0) {
-        valueAfterComma = calculation.valueAfterComma + value
-        valueEntered = Number(calculation.valueEntered)
-      } else if (calculation.comma && value != 0) {
+        valueEntered = Number(valueEntered + '' + value)
+      } else if (comma && value === 0) {
+        valueAfterComma = valueAfterComma + value
+        valueEntered = Number(valueEntered)
+      } else if (comma && value != 0) {
         valueAfterComma = ''
 
-        if (calculation.valueEntered.toString().includes('.')) {
-          valueEntered = Number(
-            calculation.valueEntered + calculation.valueAfterComma + value
-          )
+        if (valueEntered.toString().includes('.')) {
+          valueEntered = Number(valueEntered + valueAfterComma + value)
         } else {
-          valueEntered = Number(
-            calculation.valueEntered + '.' + calculation.valueAfterComma + value
-          )
+          valueEntered = Number(valueEntered + '.' + valueAfterComma + value)
         }
       }
 
-      setCalculation(prevState => ({
+      return setCalculation(prevState => ({
         ...prevState,
+        value2,
         valueEntered,
         valueAfterComma
       }))
     }
+
+    return calculation
   }
 
   function handleAddComma() {
+    let valueEntered = 0
+    let value2 = calculation.value2
+    let valueAfterComma = calculation.valueAfterComma
+
+    if (!AdjustEquals()) {
+      valueAfterComma = ''
+      valueEntered = calculation.valueEntered
+    }
+
+    if (calculation.value1 && calculation.value2 === null) {
+      valueEntered = 0
+      value2 = 0
+    }
+
     setCalculation(prevState => ({
       ...prevState,
-      comma: true
+      value2,
+      valueEntered,
+      comma: true,
+      valueAfterComma
+    }))
+  }
+
+  function handleCalculation(typeCalc: TypeCalculation) {
+    switch (typeCalc) {
+      case 'equals': {
+        if (
+          calculation.typeCalculation === '' &&
+          calculation.lastTypeCalculation === ''
+        ) {
+          return calculation
+        }
+
+        if (
+          calculation.typeCalculation === '' &&
+          calculation.lastTypeCalculation != ''
+        ) {
+          let historic = calculation.historic
+          let calc = 0
+
+          if (
+            calculation.lastTypeCalculation === 'sum' ||
+            calculation.lastTypeCalculation === 'minus' ||
+            calculation.lastTypeCalculation === 'times' ||
+            calculation.lastTypeCalculation === 'divided'
+          ) {
+            if (calculation.value2) {
+              if (calculation.lastTypeCalculation === 'sum') {
+                calc = calculation.valueEntered + calculation.value2
+              } else if (calculation.lastTypeCalculation === 'minus') {
+                calc = calculation.valueEntered - calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'times') {
+                calc = calculation.valueEntered * calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'divided') {
+                calc = calculation.valueEntered / calculation.value2
+              }
+            }
+
+            let value2Formatted = '0'
+            if (calculation.value2) {
+              value2Formatted = formattedStringforNumber(calculation.value2)
+            }
+
+            historic =
+              historic +
+              formattedStringforNumber(calculation.valueEntered) +
+              ' ' +
+              signalTypeCalculator[calculation.lastTypeCalculation] +
+              ' ' +
+              value2Formatted
+          }
+
+          const newCalculation: CalculatorProps = {
+            historic,
+            value1: calculation.valueEntered,
+            value2: calculation.value2,
+            valueEntered: calc,
+            typeCalculation: typeCalc,
+            lastTypeCalculation: calculation.lastTypeCalculation,
+            comma: false,
+            valueAfterComma: ''
+          }
+
+          return setCalculation(newCalculation)
+        }
+
+        if (
+          calculation.typeCalculation === 'sum' ||
+          calculation.typeCalculation === 'minus' ||
+          calculation.typeCalculation === 'times' ||
+          calculation.typeCalculation === 'divided'
+        ) {
+          let calc = 0
+
+          if (calculation.value1) {
+            if (calculation.typeCalculation === 'sum') {
+              calc = calculation.value1 + calculation.valueEntered
+            } else if (calculation.typeCalculation === 'minus') {
+              calc = calculation.value1 - calculation.valueEntered
+            }
+            if (calculation.typeCalculation === 'times') {
+              calc = calculation.value1 * calculation.valueEntered
+            }
+            if (calculation.typeCalculation === 'divided') {
+              calc = calculation.value1 / calculation.valueEntered
+            }
+          }
+
+          const historic =
+            calculation.historic +
+            ' ' +
+            signalTypeCalculator[calculation.typeCalculation] +
+            ' ' +
+            formattedStringforNumber(calculation.valueEntered)
+
+          const newCalculation: CalculatorProps = {
+            historic,
+            value1: calculation.value1,
+            value2: calculation.valueEntered,
+            valueEntered: calc,
+            typeCalculation: typeCalc,
+            lastTypeCalculation: calculation.typeCalculation,
+            comma: false,
+            valueAfterComma: ''
+          }
+
+          return setCalculation(newCalculation)
+        }
+
+        if (calculation.typeCalculation === 'equals') {
+          let historic = calculation.historic
+          let calc = 0
+
+          if (
+            calculation.lastTypeCalculation === 'sum' ||
+            calculation.lastTypeCalculation === 'minus' ||
+            calculation.lastTypeCalculation === 'times' ||
+            calculation.lastTypeCalculation === 'divided'
+          ) {
+            let calcTotal = 0
+
+            if (calculation.value1 && calculation.value2) {
+              if (calculation.lastTypeCalculation === 'sum') {
+                calcTotal = calculation.value1 + calculation.value2
+              } else if (calculation.lastTypeCalculation === 'minus') {
+                calcTotal = calculation.value1 - calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'times') {
+                calcTotal = calculation.value1 * calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'divided') {
+                calcTotal = calculation.value1 / calculation.value2
+              }
+            }
+
+            historic =
+              historic +
+              ' ' +
+              signalTypeCalculator[calculation.typeCalculation] +
+              ' ' +
+              formattedStringforNumber(calcTotal) +
+              ' | '
+
+            if (calculation.value2) {
+              if (calculation.lastTypeCalculation === 'sum') {
+                calc = calculation.valueEntered + calculation.value2
+              } else if (calculation.lastTypeCalculation === 'minus') {
+                calc = calculation.valueEntered - calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'times') {
+                calc = calculation.valueEntered * calculation.value2
+              }
+              if (calculation.lastTypeCalculation === 'divided') {
+                calc = calculation.valueEntered / calculation.value2
+              }
+            }
+
+            let value2Formatted = '0'
+            if (calculation.value2) {
+              value2Formatted = formattedStringforNumber(calculation.value2)
+            }
+
+            historic =
+              historic +
+              formattedStringforNumber(calculation.valueEntered) +
+              ' ' +
+              signalTypeCalculator[calculation.lastTypeCalculation] +
+              ' ' +
+              value2Formatted
+          }
+
+          const newCalculation: CalculatorProps = {
+            historic,
+            value1: calculation.valueEntered,
+            value2: calculation.value2,
+            valueEntered: calc,
+            typeCalculation: typeCalc,
+            lastTypeCalculation: calculation.lastTypeCalculation,
+            comma: false,
+            valueAfterComma: ''
+          }
+
+          return setCalculation(newCalculation)
+        }
+
+        return calculation
+      }
+      case 'divided':
+      case 'times':
+      case 'minus':
+      case 'sum': {
+        if (
+          calculation.typeCalculation != '' &&
+          calculation.typeCalculation != 'equals'
+        ) {
+          return setCalculation(prevState => ({
+            ...prevState,
+            typeCalculation: typeCalc
+          }))
+        }
+
+        if (calculation.typeCalculation === '') {
+          return setCalculation(prevState => ({
+            ...prevState,
+            value1: calculation.valueEntered,
+            value2: null,
+            typeCalculation: typeCalc,
+            historic:
+              calculation.historic +
+              '' +
+              formattedStringforNumber(calculation.valueEntered),
+            comma: false,
+            valueAfterComma: ''
+          }))
+        }
+
+        if (calculation.typeCalculation === 'equals') {
+          let historic = calculation.historic
+
+          let calcTotal = 0
+
+          if (calculation.value1 && calculation.value2) {
+            if (calculation.lastTypeCalculation === 'sum') {
+              calcTotal = calculation.value1 + calculation.value2
+            } else if (calculation.lastTypeCalculation === 'minus') {
+              calcTotal = calculation.value1 - calculation.value2
+            }
+            if (calculation.lastTypeCalculation === 'times') {
+              calcTotal = calculation.value1 * calculation.value2
+            }
+            if (calculation.lastTypeCalculation === 'divided') {
+              calcTotal = calculation.value1 / calculation.value2
+            }
+          }
+
+          historic =
+            historic +
+            ' ' +
+            signalTypeCalculator[calculation.typeCalculation] +
+            ' ' +
+            formattedStringforNumber(calcTotal) +
+            ' | '
+
+          historic =
+            historic + formattedStringforNumber(calculation.valueEntered)
+
+          const newCalculation: CalculatorProps = {
+            historic,
+            value1: calculation.valueEntered,
+            value2: null,
+            valueEntered: calculation.valueEntered,
+            typeCalculation: typeCalc,
+            lastTypeCalculation: calculation.lastTypeCalculation,
+            comma: false,
+            valueAfterComma: ''
+          }
+
+          return setCalculation(newCalculation)
+        }
+
+        return calculation
+      }
+      default:
+        return calculation
+    }
+  }
+
+  function handleNegativeOrPositive() {
+    if (calculation.valueEntered === 0) {
+      return calculation
+    }
+
+    return setCalculation(prevState => ({
+      ...prevState,
+      valueEntered: calculation.valueEntered * -1
+    }))
+  }
+
+  function handlePercentage() {
+    if (calculation.valueEntered === 0) {
+      return calculation
+    }
+
+    let calc = calculation.valueEntered / 100
+    if (
+      calculation.value1 &&
+      calculation.value1 != 0 &&
+      calculation.value2 &&
+      calculation.value2 != 0
+    ) {
+      calc = calc * valueReturnsTotal()
+    } else if (calculation.value1 && calculation.value1 != 0) {
+      calc = calc * calculation.value1
+    }
+
+    return setCalculation(prevState => ({
+      ...prevState,
+      valueEntered: calc
     }))
   }
 
   return (
     <Container>
       <ContainerTop>
-        <Calc>{calculation.historic}</Calc>
+        <Calc numberOfLines={1} ellipsizeMode="head">
+          {calculation.historic}
+        </Calc>
         <ContainerResult>
-          <Result>{formattedStringforNumber(calculation.valueEntered)}</Result>
+          {calculation.typeCalculation === 'divided' && <IconDivided />}
+          {calculation.typeCalculation === 'times' && <IconTimes />}
+          {calculation.typeCalculation === 'minus' && <IconMinus />}
+          {calculation.typeCalculation === 'sum' && <IconSum />}
+          {calculation.typeCalculation === 'equals' && <IconEquals />}
+          <Result>
+            {formattedStringforNumber(calculation.valueEntered, true)}
+          </Result>
         </ContainerResult>
       </ContainerTop>
       <ContainerButtons>
@@ -146,8 +566,16 @@ export function Calculator() {
           variant="graydark"
           typeButtom="C"
         />
-        <ButtonCalculator variant="graydark" typeButtom="percentage" />
-        <ButtonCalculator variant="violetdark" typeButtom="divided" />
+        <ButtonCalculator
+          onPress={() => handlePercentage()}
+          variant="graydark"
+          typeButtom="percentage"
+        />
+        <ButtonCalculator
+          onPress={() => handleCalculation('divided')}
+          variant="violetdark"
+          typeButtom="divided"
+        />
         <ButtonCalculator
           onPress={() => handleAddNumber(7)}
           variant="graydark"
@@ -163,7 +591,11 @@ export function Calculator() {
           variant="graydark"
           typeButtom="9"
         />
-        <ButtonCalculator variant="violetdark" typeButtom="times" />
+        <ButtonCalculator
+          onPress={() => handleCalculation('times')}
+          variant="violetdark"
+          typeButtom="times"
+        />
         <ButtonCalculator
           onPress={() => handleAddNumber(4)}
           variant="graydark"
@@ -179,7 +611,11 @@ export function Calculator() {
           variant="graydark"
           typeButtom="6"
         />
-        <ButtonCalculator variant="violetdark" typeButtom="minus" />
+        <ButtonCalculator
+          onPress={() => handleCalculation('minus')}
+          variant="violetdark"
+          typeButtom="minus"
+        />
         <ButtonCalculator
           onPress={() => handleAddNumber(1)}
           variant="graydark"
@@ -195,8 +631,16 @@ export function Calculator() {
           variant="graydark"
           typeButtom="3"
         />
-        <ButtonCalculator variant="violetdark" typeButtom="sum" />
-        <ButtonCalculator variant="graydark" typeButtom="sumandminus" />
+        <ButtonCalculator
+          onPress={() => handleCalculation('sum')}
+          variant="violetdark"
+          typeButtom="sum"
+        />
+        <ButtonCalculator
+          onPress={() => handleNegativeOrPositive()}
+          variant="graydark"
+          typeButtom="sumandminus"
+        />
         <ButtonCalculator
           onPress={() => handleAddNumber(0)}
           variant="graydark"
@@ -207,7 +651,11 @@ export function Calculator() {
           variant="graydark"
           typeButtom=","
         />
-        <ButtonCalculator variant="violetlight" typeButtom="equals" />
+        <ButtonCalculator
+          onPress={() => handleCalculation('equals')}
+          variant="violetlight"
+          typeButtom="equals"
+        />
       </ContainerButtons>
     </Container>
   )

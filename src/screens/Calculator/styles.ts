@@ -1,4 +1,13 @@
 import styled from 'styled-components/native'
+import {
+  Percent,
+  Divide,
+  X,
+  Minus,
+  Plus,
+  Equals,
+  PlusMinus
+} from 'phosphor-react-native'
 
 export const PADDING_HORIZONTAL = 32
 
@@ -29,6 +38,7 @@ export const Calc = styled.Text`
 export const ContainerResult = styled.View`
   width: 100%;
   flex-direction: row;
+  align-items: center;
 `
 
 export const Result = styled.Text`
@@ -44,3 +54,28 @@ export const ContainerButtons = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
 `
+
+export const IconDivided = styled(Divide).attrs(props => ({
+  size: 20,
+  color: props.theme.COLORS.GRAY_600
+}))``
+
+export const IconTimes = styled(X).attrs(props => ({
+  size: 20,
+  color: props.theme.COLORS.GRAY_600
+}))``
+
+export const IconMinus = styled(Minus).attrs(props => ({
+  size: 20,
+  color: props.theme.COLORS.GRAY_600
+}))``
+
+export const IconSum = styled(Plus).attrs(props => ({
+  size: 20,
+  color: props.theme.COLORS.GRAY_600
+}))``
+
+export const IconEquals = styled(Equals).attrs(props => ({
+  size: 20,
+  color: props.theme.COLORS.GRAY_600
+}))``
