@@ -4,9 +4,13 @@
 
 Developed the project of a calculator in react native.
 
-<!-- ## 🎥 Implementation Video
+## 🎥 Implementation Video
 
-In the GitHub edit, drag the video that it already puts on github itself. -->
+
+
+https://user-images.githubusercontent.com/40831841/216842132-ddbd3a33-5703-44e2-842e-db8bed30d456.mp4
+
+
 
 ## 🎨 Layout
 
