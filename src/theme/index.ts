@@ -11,6 +11,7 @@ export default {
     GRAY_100: '#EBEBEB',
     GRAY_600: '#6B6B6B',
     GRAY_800: '#2D2A37',
+    GRAY_900: '#1b1921',
     VIOLET_500: '#975DFA',
     VIOLET_600: '#7F45E2',
     VIOLET_800: '#462878'
